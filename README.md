@@ -54,6 +54,8 @@ Create `backend/.env`:
 PORT=5025
 JWT_SECRET=change_this_secret
 ALLOWED_ORIGINS=http://localhost:5173
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 `ALLOWED_ORIGINS` can be a comma-separated list.
@@ -117,16 +119,35 @@ ALLOWED_ORIGINS=https://your-frontend.vercel.app,https://exam.yourdomain.com
 
 ## Important Limitation
 
-This app currently uses in-memory storage in `backend/data/store.js`.
+This app supports `Supabase` for permanent storage.
 
-That means:
+If `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not set, it falls back to in-memory storage.
+
+That fallback means:
 - users are not permanent
 - submissions are not permanent
 - logs are not permanent
 - backend restarts will wipe competition data
 
-This is okay for demos, but not safe for a real competition.
+## Supabase Setup
+
+1. Create a Supabase project
+2. Open the SQL editor
+3. Run [backend/supabase-schema.sql](/Users/mrudulpmanesh/Desktop/exam%20portal/backend/supabase-schema.sql)
+4. Copy:
+   - Project URL
+   - Service Role Key
+5. Add them to Render:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+6. Redeploy the backend
+
+After that, users, submissions, and logs will survive restarts and redeploys.
 
 ## Recommended Next Step
 
-Before a real event, move users, submissions, and logs to a database such as Supabase or MongoDB.
+For a real event, configure Supabase before competitors start using the system.

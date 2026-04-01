@@ -1,4 +1,4 @@
-const store = require('../data/store');
+const { insertLogs, updateUser } = require('../data/repository');
 
 const SUSPICION_WEIGHTS = {
   tab_switch: 2,
@@ -10,7 +10,7 @@ const SUSPICION_WEIGHTS = {
   context_menu: 1
 };
 
-const logEvents = (req, res) => {
+const logEvents = async (req, res) => {
   const user = req.user;
   const { events } = req.body;
 
@@ -23,24 +23,19 @@ const logEvents = (req, res) => {
   
   events.forEach(event => {
     const { type, metadata, timestamp } = event;
-    
-    // add to store logs
-    store.logs.push({
-      id: Date.now() + Math.random().toString(36).substring(7),
-      userId: user.id,
-      username: user.username,
-      eventType: type,
-      metadata,
-      timestamp: timestamp || Date.now()
-    });
 
     if (SUSPICION_WEIGHTS[type]) {
       scoreIncrease += SUSPICION_WEIGHTS[type];
     }
   });
 
+  await insertLogs({ user, events });
+
   if (scoreIncrease > 0) {
-    user.suspicionScore = (user.suspicionScore || 0) + scoreIncrease;
+    const updatedUser = await updateUser(user.id, {
+      suspicionScore: (user.suspicionScore || 0) + scoreIncrease
+    });
+    user.suspicionScore = updatedUser.suspicionScore;
   }
 
   res.json({ message: 'Events logged successfully.' });

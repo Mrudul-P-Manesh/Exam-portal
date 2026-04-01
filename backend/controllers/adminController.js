@@ -1,9 +1,8 @@
-const store = require('../data/store');
+const { store, listCandidateUsers, listLogsByUser, listSubmissionsByUser } = require('../data/repository');
 
-const getUsers = (req, res) => {
-  const candidates = store.users
-  .filter(u => u.role === 'candidate')
-  .map(u => ({
+const getUsers = async (req, res) => {
+  const users = await listCandidateUsers();
+  const candidates = users.map(u => ({
     id: u.id,
     username: u.username,
     role: u.role,
@@ -16,15 +15,15 @@ const getUsers = (req, res) => {
   res.json({ candidates });
 };
 
-const getUserLogs = (req, res) => {
+const getUserLogs = async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
-  const logs = store.logs.filter(log => log.userId === userId);
+  const logs = await listLogsByUser(userId);
   res.json({ logs });
 };
 
-const getUserSubmissions = (req, res) => {
+const getUserSubmissions = async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
-  const submissions = store.submissions.filter(sub => sub.userId === userId);
+  const submissions = await listSubmissionsByUser(userId);
   res.json({ submissions });
 };
 

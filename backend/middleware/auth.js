@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-const store = require('../data/store');
+const { findUserById } = require('../data/repository');
 
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
@@ -10,7 +10,7 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_for_demo_purposes_only');
-    const user = store.users.find((u) => u.id === decoded.id);
+    const user = await findUserById(decoded.id);
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid user.' });

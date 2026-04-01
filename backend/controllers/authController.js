@@ -1,5 +1,10 @@
 const jwt = require('jsonwebtoken');
-const store = require('../data/store');
+const {
+  store,
+  findAdminByCredentials,
+  findCandidateByUsername,
+  createCandidateUser
+} = require('../data/repository');
 
 const createToken = (user) => jwt.sign(
   { id: user.id, username: user.username, role: user.role },
@@ -24,13 +29,11 @@ const sendLoginResponse = (user, res) => {
   });
 };
 
-const login = (req, res) => {
+const login = async (req, res) => {
   const { username, password } = req.body;
   const trimmedUsername = username?.trim();
 
-  const adminUser = store.users.find(
-    (u) => u.role === 'admin' && u.username === trimmedUsername && u.password === password
-  );
+  const adminUser = await findAdminByCredentials(trimmedUsername, password);
 
   if (adminUser) {
     return sendLoginResponse(adminUser, res);
@@ -50,22 +53,10 @@ const login = (req, res) => {
     return res.status(400).json({ error: 'This name is reserved. Please use your own name.' });
   }
 
-  let candidateUser = store.users.find(
-    (u) => u.role === 'candidate' && u.username.toLowerCase() === trimmedUsername.toLowerCase()
-  );
+  let candidateUser = await findCandidateByUsername(trimmedUsername);
 
   if (!candidateUser) {
-    const nextId = store.users.reduce((maxId, user) => Math.max(maxId, user.id), 0) + 1;
-    candidateUser = {
-      id: nextId,
-      username: trimmedUsername,
-      password,
-      role: 'candidate',
-      suspicionScore: 0,
-      hasStarted: false,
-      hasCompleted: false
-    };
-    store.users.push(candidateUser);
+    candidateUser = await createCandidateUser(trimmedUsername, password);
   }
 
   if (store.activeSessions.has(candidateUser.id)) {
