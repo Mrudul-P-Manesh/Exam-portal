@@ -4,6 +4,13 @@ A web-based platform for conducting debugging-focused coding assessments in C an
 
 ---
 
+## Live Deployment
+
+- Application: https://exam-portal-ten-sooty.vercel.app/  
+- Backend API: https://your-backend.onrender.com  
+
+---
+
 ## Overview
 
 This system enables administrators to host debugging challenges and monitor participant activity. Competitors access the platform through a simplified login flow and attempt structured problem sets within the interface.
@@ -87,11 +94,6 @@ Do not commit `.env` files or secrets to version control.
 
 Set environment variables in the Render dashboard.
 
-Example backend URL:
-```
-https://your-backend.onrender.com
-```
-
 ---
 
 ### Frontend (Vercel)
@@ -109,8 +111,12 @@ VITE_API_BASE_URL=https://your-backend.onrender.com/api
 
 ## Data Storage
 
-- Supabase (recommended): persistent storage for users, submissions, and logs  
-- In-memory fallback: data resets on server restart (not suitable for production)
+The application supports two storage modes:
+
+- **Supabase (recommended):** persistent storage for users, submissions, and event logs  
+- **In-memory fallback:** data resets on server restart (not suitable for production)  
+
+Supabase should be configured before running a live competition.
 
 ---
 
