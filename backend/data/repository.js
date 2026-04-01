@@ -2,6 +2,17 @@ const store = require('./store');
 const { supabase } = require('../lib/supabase');
 
 const nowIso = () => new Date().toISOString();
+const toIsoTimestamp = (value) => {
+  if (!value) return nowIso();
+  if (typeof value === 'number') return new Date(value).toISOString();
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return nowIso();
+  }
+
+  return parsed.toISOString();
+};
 
 const normalizeUser = (user) => {
   if (!user) return null;
@@ -252,7 +263,7 @@ const insertLogs = async ({ user, events }) => {
     username: user.username,
     eventType: event.type,
     metadata: event.metadata || null,
-    timestamp: event.timestamp || nowIso()
+    timestamp: toIsoTimestamp(event.timestamp)
   }));
 
   if (!client) {
