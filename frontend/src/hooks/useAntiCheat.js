@@ -3,6 +3,17 @@ import api from '../utils/api';
 
 export const useAntiCheat = (isActive) => {
   const eventsQueue = useRef([]);
+  const flushQueue = useCallback(() => {
+    if (!isActive || eventsQueue.current.length === 0) return;
+
+    const payload = { events: [...eventsQueue.current] };
+    eventsQueue.current = [];
+
+    api.post('/log-event', payload).catch(() => {
+      eventsQueue.current = [...payload.events, ...eventsQueue.current];
+      console.error("Failed to sync anti-cheat logs.");
+    });
+  }, [isActive]);
 
   const logEvent = useCallback((type, metadata = {}) => {
     if (!isActive) return;
@@ -19,20 +30,14 @@ export const useAntiCheat = (isActive) => {
     if (!isActive) return;
 
     const interval = setInterval(() => {
-      if (eventsQueue.current.length > 0) {
-        // Send and clear
-        const payload = { events: [...eventsQueue.current] };
-        eventsQueue.current = [];
-        api.post('/log-event', payload).catch(err => {
-          // If network failed, put events back for next try
-          eventsQueue.current = [...payload.events, ...eventsQueue.current];
-          console.error("Failed to sync anti-cheat logs.");
-        });
-      }
+      flushQueue();
     }, 5000); // 5 seconds
 
-    return () => clearInterval(interval);
-  }, [isActive]);
+    return () => {
+      clearInterval(interval);
+      flushQueue();
+    };
+  }, [isActive, flushQueue]);
 
   useEffect(() => {
     if (!isActive) {
@@ -105,6 +110,10 @@ export const useAntiCheat = (isActive) => {
       }
     };
 
+    const handlePageHide = () => {
+      flushQueue();
+    };
+
     // Attach listeners
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('keydown', handleKeyDown);
@@ -114,6 +123,7 @@ export const useAntiCheat = (isActive) => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('pagehide', handlePageHide);
 
     // Disable selection via CSS
     document.body.style.userSelect = 'none';
@@ -128,11 +138,12 @@ export const useAntiCheat = (isActive) => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('pagehide', handlePageHide);
       
       document.body.style.userSelect = 'auto';
       document.body.style.webkitUserSelect = 'auto';
     };
-  }, [isActive, logEvent]);
+  }, [isActive, logEvent, flushQueue]);
 
   return { logEvent };
 };

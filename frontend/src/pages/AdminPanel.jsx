@@ -16,6 +16,16 @@ export default function AdminPanel() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!selectedUser) return;
+
+    const interval = setInterval(() => {
+      showUserDetails(selectedUser.id);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [selectedUser]);
+
   const fetchCandidates = async () => {
     try {
       const { data } = await api.get('/admin/users');
